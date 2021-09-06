@@ -1,0 +1,33 @@
+Global Method: give the file's name - save the file into new file called "file_name + _cleaned". 
+
+
+A. Purely Column based cleaning 
+I. Some column dropping 
+- drop useless columns 
+  Function takes name of columns to drop
+  Checks if columns have more than one type of element, o/w we drop 
+
+II. Feature transformation 
+- Feature grouping 
+  Some features can be grouped: not the entire info needed (eg. phone number can be grouped into feature: client gave his phone number) 
+- One-hot-encoding if needed  
+
+III. Correlation checks ... 
+- draw the heatmap 
+- Check which feature are highly correlated - drop some 
+  (define threshold, delete feature that are passed a thershold them -- attention, not features correlated to the target) 
+- or use PCA 
+
+B. Oberservation based selection 
+I. Different behaviour to adopt toward null values (what to do with null values ?) 
+- propose different options: replace by mean, median, guess the value ... 
+  Needs to be feature based, find a way to map column's name to the methods' name selected for outlier 
+
+II. Outliers removal
+Select a method (one or many) to delete outliers cov quantiles, power method ... 
+
+III. Further pre-porcessing (normalization, standardization ...) 
+
+Remove outliers ? Which methods to use ? 
+ 
+Normalization 
