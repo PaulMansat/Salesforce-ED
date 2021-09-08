@@ -6,6 +6,9 @@ from scipy.stats import pearsonr, spearmanr
 from sklearn.feature_selection import SelectFromModel
 from sklearn.cross_decomposition import PLSRegression
 
+# Implementation of the Wide Spectrum (WiSe) feature selection algorithm. 
+# For more information, please see the reference paper. 
+
 #########################################
 # Helper methods for univariate filtering 
 #########################################
