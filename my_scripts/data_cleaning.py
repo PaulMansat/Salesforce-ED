@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
+# A set of usefull functions when one has to perform some data cleaning 
 
 def draw_heatmap(df, columns, figsize_=8): 
     plt.figure(figsize=(figsize_, figsize_))
