@@ -9,7 +9,26 @@ from sklearn.metrics import mean_absolute_error, auc, roc_curve, accuracy_score,
 
 # target should already be encoded with O or 1
 class TabNet_binary_classifer_trainer:
+    """
+    TabNet binary classifier trainer used to train TabNet models. 
+    Note that the trainer excepts a 0, 1 binary encoding of the output. 
+
+    """
+
     def __init__(self, df, target, n_d=15, n_a=15, lr=1e-1, lambda_sparse=1e-5, step_size=75, gamma=0.7):
+        """
+        Constructs a new 'TabNet_binary_classifer_trainer' object. 
+
+        :param df: dataframe used by the trainer 
+        :param target: name of the target to predict
+        :param n_d: hyper-parameter of the model (cf. TabNet paper)
+        :param n_a: hyper-parameter of the model (cf. TabNet paper)
+        :param lr: learning rate used during training 
+        :param lambda_sparse: hyper-parameter of the model (cf. TabNet paper)
+        :param step_size: hyper-parameter of the model (cf. TabNet paper)
+        :param gamma: hyper-parameter of the model (cf. TabNet paper)
+        :return: returns nothing
+        """
         # save values params
         self.n_d = n_d
         self.n_a = n_a
@@ -48,6 +67,13 @@ class TabNet_binary_classifer_trainer:
         self.cat_dims = None
         
     def print_kpi(self, selection_mask):
+        """
+        Prints some key KPI that can be used to evaluate the model. 
+
+
+        :param selection_mask: the selection mask used to extract the data's columns used by the model 
+        :return: returns nothing 
+        """
         y_pred = self.model.predict(self.X_test[:,selection_mask])
         # plot some relevant KPI
         print('Accuracy: {:.2f}'.format(accuracy_score(y_pred, self.y_test)))
@@ -63,9 +89,18 @@ class TabNet_binary_classifer_trainer:
         plt.title("ROC Curve - Area = {:.5f}".format(auc(fpr, tpr)));
     
     def get_model(self):
+        """
+        Getter function used to return the model. 
+
+        :return: returns the model
+        """
         return self.model
         
     def reinitialize_model(self, cat_idxs, cat_dims):
+        """
+        Reinitializes the model contained in the trainer. 
+
+        """
         self.model = TabNetClassifier(
                            n_d=self.n_d, n_a=self.n_a,
                            cat_idxs=cat_idxs,
@@ -84,6 +119,12 @@ class TabNet_binary_classifer_trainer:
         
         
     def data_encoding(self, df): 
+        """
+        Uses Ordinal Encoding to encode categorical features of a dataframe. 
+
+        :param df: dataframe to encode 
+        :return: the encoded dataframe allong with a dictionnary associated each categorical features to its mapping
+        """
         mappings = {}
         cat_dims_full = {}
         for col in dc.non_numerical_features(df):
@@ -93,7 +134,13 @@ class TabNet_binary_classifer_trainer:
             
         return df, mappings, cat_dims_full
     
-    def get_cat_idxs(self, selected_features):  
+    def get_cat_idxs(self, selected_features): 
+        """
+        Computes the column index of the categorical features in the dataset. 
+
+        :param selected_features: name of the features selected to train the model 
+        :return: returns the categorical column indices
+        """ 
         ordered_selected_features = [col for col in self.all_features if col in selected_features]
     
         cat_idxs = [idx for idx, col in enumerate(ordered_selected_features) if col in selected_features and col in self.categorical_features]
@@ -103,6 +150,12 @@ class TabNet_binary_classifer_trainer:
         return cat_idxs, cat_dims
     
     def get_selection_mask(self, selected_features):
+        """
+        Computes the mask used to select columns of a nd.array based on the name of columns to select. 
+
+        :param selected_features: the name of feature to select
+        :return: returns a boolean mask that can be applied to the nd.array version of a dataframe to slice the correct columns
+        """
         is_selected = lambda x, list_: True if x in list_ else False
         selection_mask = [is_selected(col, selected_features) for col in self.all_features]
         return selection_mask
@@ -110,6 +163,20 @@ class TabNet_binary_classifer_trainer:
     
     def train_model(self, max_epochs=50, patience=50, reinitialize_model=False, features=None, 
                     eval_metric=['auc'], verbose=0, end_evaluation=False, weights=0):
+
+        """
+        Trains a TabNet model given the list of hyper-parameter given as argument. 
+
+        :param max_epochs: number of training epochs
+        :param patience: number of epochs accepted before early stopping
+        :param reinitialize_model: boolean identifier used to tell if trainer should start with a "fresh" new model
+        :param features: name of the features on which the model should be trained on 
+        :param eval_metric: evaluation metric of each epoch
+        :param verbose: 1 to print result at each epoch, 0 to not return any prints 
+        :param end_evaluation: boolean identifier used to tell if key KPI computed on a testing set should be returned at the end of the training loop
+        :param weights: 1 to sample training points according to the classes weights, 0 to sample points uniformly at random
+        :return: returns nothing
+        """
         if type(features) == type(None):
             features = self.all_features
         
@@ -151,6 +218,12 @@ class TabNet_binary_classifer_trainer:
             self.print_kpi(selection_mask)
     
     def print_feature_importance(self, nbr_features_to_print=10):
+        """
+        Prints the k-most important features
+
+        :param nbr_features_to_print: number of features to print 
+        :return: returns nothing
+        """
         dict_feature_importance = dict(zip(self.features, self.model.feature_importances_))
         dict_feature_importance = {k: v for k, v in sorted(dict_feature_importance.items(), key=lambda item: item[1], reverse=True)}
 

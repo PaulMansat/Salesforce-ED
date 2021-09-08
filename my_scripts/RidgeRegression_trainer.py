@@ -18,7 +18,25 @@ from sklearn.metrics import mean_absolute_error, auc, roc_curve, accuracy_score,
 
 
 class RidgeRegression_classifer_trainer: 
+    """
+    A Ridge Regression trainer used to train Ridge Regression Models.
+
+    """
     def __init__(self, df, target, norm=False, std=False, power_trans=False, cov_rem=False, DBSCAN_rem=False, quant_rem=False):
+         """
+        Construct a new 'RidgeRegression_classifer_trainer' object.
+
+        :param df: dataframe used by the trainer 
+        :param target: name of the target to predict
+        :param norm: boolean identifier used to tell if data should be normalized 
+        :param std: boolean identifer used to tell if data should be standardized 
+        :param power_trans: boolean identifier used to tell if data should go through a Power Transformation
+        :param cov_rem: boolean identifier used to tell if outliers should be removed using the covariance removal method
+        :param DBSCAN_rem: boolean identifier used to tell if outliers should be removed using DBSCAN
+        :param quant_rem: boolean identifier used to tell if outliers should be removed using quantile removal techniques 
+        :return: returns nothing
+        """
+
         X, y = df.drop(columns=[target]), df[target]
         
         X, self.mappings = self.data_encoding(X)
@@ -67,6 +85,12 @@ class RidgeRegression_classifer_trainer:
         self.pca = None
         
     def data_encoding(self, df): 
+        """
+        Uses Ordinal Encoding to encode categorical features of a dataframe. 
+
+        :param df: dataframe to encode 
+        :return: the encoded dataframe allong with a dictionnary associated each categorical features to its mapping
+        """
         mappings = {}
         for col in dc.non_numerical_features(df):
             df, mapping = dc.feature_ordinalEncoding(df, col)
@@ -78,6 +102,11 @@ class RidgeRegression_classifer_trainer:
         Apply a transformation to the data. 
         Options are standardization or normalization (using L2 norm).
         By default : no transformation applied to data 
+
+        :param data: dataframe to encode 
+        :param norm: boolean identifier used to tell if data should be normalized 
+        :param std: boolean identifier used to tell if data should be standardized 
+        :return: returns the normalized or standardize data 
         """
         result = data
         if norm : 
@@ -89,8 +118,10 @@ class RidgeRegression_classifer_trainer:
     def build_poly(self, x, degree):
         """
         Used to send the data in higher dimension using polynomial expansion
-        :param x: the datapoint
+
+        :param x: a datapoint
         :param degree: the degree to which the datapoint is sent 
+        :return: returns the polynomial expansion of the datapoint 
         """
         # send features in high dimension using polynomial expansion 
         poly = np.ones((len(x), 1))
@@ -101,6 +132,11 @@ class RidgeRegression_classifer_trainer:
     def build_k_indices(self, y, k_fold, seed):
         """
         Builds k-indices for k-fold.
+
+        :param y: the prediction target 
+        :param k_fold: the number of fold to create 
+        :param seed: the seed 
+        :return: returns the data indices of each fold 
         """
         num_row = y.shape[0]
         interval = int(num_row / k_fold)
@@ -114,10 +150,12 @@ class RidgeRegression_classifer_trainer:
         """
         Given a set of hyper-parameters, train multiple models using different parameter combinations, and returns the combination
         that yielded to the best result. 
+
         :param y: target 
         :param x: data
         :param learning_param_range: the learning parameter range for ridge regression
         :param n_components: the number of components used to reduce the number of features using PCA 
+        :return: return the set of optimal hyper-parameters
         """
         scores = []
         pcas = []
@@ -152,6 +190,12 @@ class RidgeRegression_classifer_trainer:
         return minDegree, minScore, minPCA_value
     
     def get_selection_mask(self, selected_features):
+        """
+        Computes the mask used to select columns of a nd.array based on the name of columns to select. 
+
+        :param selected_features: the name of feature to select
+        :return: returns a boolean mask that can be applied to the nd.array version of a dataframe to slice the correct columns
+        """
         is_selected = lambda x, list_: True if x in list_ else False
         selection_mask = [is_selected(col, selected_features) for col in self.all_features]
         return selection_mask
@@ -160,6 +204,13 @@ class RidgeRegression_classifer_trainer:
         """
         Given a pre-set set of parameters, trains a model, keeps the model that had the best performance, and returns the 
         AuROC score of the best performing model. 
+
+        :param learning_rates: list of learning rates to try
+        :param degrees: list of degrees (hyper-parameter)
+        :param n_components: list of the number of components to keep (using PCA - hyper-parameter)
+        :param feature: name of the features on which the model should be trained on 
+        :param end_evaluation: boolean identifier used to tell if key KPI computed on a testing set should be returned at the end of the training loop
+        :return: returns nothing
         """
         
         if type(features) == type(None):
@@ -187,6 +238,13 @@ class RidgeRegression_classifer_trainer:
         
         
     def print_kpi(self, selection_mask):
+        """
+        Prints some key KPI that can be used to evaluate the model. 
+
+
+        :param selection_mask: the selection mask used to extract the data's columns used by the model 
+        :return: returns nothing 
+        """
         x_test_pca = self.pca.transform(self.X_test[:, selection_mask])
         polyTest = self.build_poly(x_test_pca, self.best_params['degree'])
         y_pred = self.model.predict(polyTest)
@@ -207,7 +265,17 @@ class RidgeRegression_classifer_trainer:
         plt.title("ROC Curve - Area = {:.5f}".format(auc(fpr, tpr)));
        
     def get_model(self):
+        """
+        Getter function used to return the model. 
+
+        :return: returns the model
+        """
         return self.model
     
     def get_params(self):
+        """
+        Getter function used to return the set of optimal hyper-parameters used by the model.
+
+        :return: returns the set of optimal hyper-parameters used by the model 
+        """
         return self.best_params

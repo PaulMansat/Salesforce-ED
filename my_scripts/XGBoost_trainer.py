@@ -8,7 +8,22 @@ from sklearn.metrics import mean_absolute_error, auc, roc_curve, accuracy_score,
  
 
 class XGBoost_classifier_trainer:
+    """
+    A XGBoost classifier trainer used to train an XGBoost model.
+
+    """
     def __init__(self, df, target, split_test=True, learning_rate=1e-2, max_depth=5, n_estimators=10): 
+        """
+        Constructs a new 'XGBoost_classifier_trainer' object. 
+
+        :param df: dataframe used by the trainer 
+        :param target: name of the target to predict
+        :param split_test: hyper-parameter of the model
+        :param learning_rate: learning rate used during training 
+        :param max_depth: hyper-parameter of the model 
+        :param n_estimators: hyper-parameter of the model 
+        :return: returns nothing
+        """
         # store relevant variables for later use 
         self.target = target
         self.split_test = split_test
@@ -42,6 +57,12 @@ class XGBoost_classifier_trainer:
         self.best_params = None
         
     def data_encoding(self, df): 
+        """
+        Uses Ordinal Encoding to encode categorical features of a dataframe. 
+
+        :param df: dataframe to encode 
+        :return: the encoded dataframe allong with a dictionnary associated each categorical features to its mapping
+        """
         mappings = {}
         for col in dc.non_numerical_features(df):
             df, mapping = dc.feature_ordinalEncoding(df, col)
@@ -50,12 +71,27 @@ class XGBoost_classifier_trainer:
     
     
     def get_model(self):
+        """
+        Getter function used to return the model. 
+
+        :return: returns the model
+        """
         return self.model
     
     def get_training_data(self):
+        """
+        Getter function used to return the training data. 
+
+        :return: returns the training data along with target training data
+        """
         return self.X_train, self.y_train
     
     def get_testing_data(self):
+        """
+        Getter function used to return the testing data. 
+
+        :return: returns the testing data along with target testing data
+        """
         if self.split_test:  
             return self.X_test, self.y_test
         else:
@@ -63,12 +99,29 @@ class XGBoost_classifier_trainer:
             return
     
     def get_validation_data(self):
+        """
+        Getter function used to return the validation data. 
+
+        :return: returns the validation data along with target validation data
+        """
         return self.X_valid, self.y_valid
     
     def get_best_params(self):
+        """
+        Getter function used to return the set of optimal hyper-parameters used by the model.
+
+        :return: returns the set of optimal hyper-parameters used by the model 
+        """
         return self.best_params
     
     def print_kpi(self, features):
+        """
+        Prints some key KPI that can be used to evaluate the model. 
+        Function prints KPI only if a testing set was originally created. 
+
+        :param features: name of the features on which the model should be trained on 
+        :return: returns nothing 
+        """
         if self.split_test:
             y_pred = self.model.predict(self.X_test[features])
             # plot some relevant KPI
@@ -88,6 +141,14 @@ class XGBoost_classifier_trainer:
         return
     
     def train_model(self, features=None, verbose=0, end_evaluation=False):
+        """
+        Trains an XGBoost model.
+        
+        :param features: name of the features on which the model should be trained on 
+        :param verbose: 1 to print result at each epoch, 0 to not return any prints 
+        :param end_evaluation: boolean identifier used to tell if key KPI computed on a testing set should be returned at the end of the training loop
+        :return: returns nothing
+        """
         if type(features) == type(None): 
             features = self.X_train.columns
         
@@ -104,7 +165,16 @@ class XGBoost_classifier_trainer:
         if end_evaluation:
             self.print_kpi(features)
                 
-    def find_best_params(self, max_depths, learning_rates, n_estimators, features, scoring='roc_auc'):    
+    def find_best_params(self, max_depths, learning_rates, n_estimators, features, scoring='roc_auc'):  
+        """
+        Given a set of hyper-parameters, find the combinaton that yields to the best results. 
+
+        :param max_depths: hyper-parameter of the model
+        :param learning_rates: hyper-parameter of the model 
+        :param n_estimators: hyper-parameter of the model 
+        :param scoring: name of the scoring function (cf. Sklearn documentation)
+        :returns: set of the best parameter (dict of the form: hyper-parameter name -> best hyper-parameter value)
+        """  
         min_max_depth = float('-inf')
         min_learning_rate = float('-inf')
         min_n_estimator = float('-inf')
@@ -139,6 +209,18 @@ class XGBoost_classifier_trainer:
         return self.best_params
     
     def train_model_on_best_params(self, max_depths, learning_rates, n_estimators, features=None, scoring='roc_auc', end_evaluation=False):
+        """
+        Trains an XGBoost model after having found the optimal hyper-parameter combination given as argument. 
+        Training is done using 5-fold cross-validation. 
+
+        :param max_depths: list of max depth hyper-parameter 
+        :param learning_rates: list of learning rates
+        :param n_estimators: list of n_estimators hyper-parameter 
+        :param features: name of the features on which the model should be trained on 
+        :param scoring: name of the scoring function (cf. Sklearn documentation)
+        :param end_evaluation: boolean identifier used to tell if key KPI computed on a testing set should be returned at the end of the training loop
+        :return
+        """
         if type(features) == type(None): 
             features = self.X_train.columns
             
@@ -170,6 +252,12 @@ class XGBoost_classifier_trainer:
             self.print_kpi(features)
             
     def print_feature_importance(self, nbr_features_to_print=10):
+        """
+        Prints the k-most important features
+
+        :param nbr_features_to_print: number of features to print 
+        :return: returns nothing
+        """
         features=self.features
         dict_feature_importance = dict(zip(features, self.model.feature_importances_))
         dict_feature_importance = {k: v for k, v in sorted(dict_feature_importance.items(), key=lambda item: item[1], reverse=True)}
@@ -187,6 +275,12 @@ class XGBoost_classifier_trainer:
         return
     
     def return_k_most_important_features(self, k=1):
+        """
+        Returns the name of the k-most important features
+
+        :param k: number of most important features to return 
+        :return: return the name of the k-most important features in the model 
+        """
         features=self.features
         dict_feature_importance = dict(zip(features, self.model.feature_importances_))
         dict_feature_importance = {k_: v for k_, v in sorted(dict_feature_importance.items(), key=lambda item: item[1], reverse=True)}
